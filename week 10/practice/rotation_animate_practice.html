@@ -1,0 +1,89 @@
+<!-- 
+下代码属于Deep Knowledge Education，其用途仅为教学展示，任何人不可复制，使用，或用于任何其他用途，违者必追究法律责任。
+The code below belongs to Deep Knowledge Education. 
+It is only for demonstration as part of education process.
+You cannot copy, use the code, nor can you use it for any other purpose.
+Offenders must be held accountable.
+Date: 17 Sep 2020
+-->
+<!-- 
+    练习说明：使用CSS和jQuery制作一个地球绕太阳转圈的动画
+    练习知识点：
+            * CSS Transform
+            * jQuery DOM manipulation
+            * jQuery Animate
+
+    知识点参考： https://www.w3schools.com/cssref/css3_pr_animation.asp
+          https://www.w3schools.com/cssref/css3_pr_animation-keyframes.asp
+          https://thoughtbot.com/blog/transitions-and-transforms
+
+
+ -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>星球轨道动画</title>
+    <style>
+        #sun {
+            position: fixed;
+            top: 500px;
+            left: 500px;
+            width: 100px;
+            height: 100px;
+            animation: rotation 10s infinite linear; 
+        }
+
+        #earth_div {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            z-index: -1;
+            top: 300px;
+            left: 300px;
+            animation: rotation 50s infinite linear; 
+        }
+
+        #earth {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            top: 0px;
+            left: 0px;
+        }
+
+        @keyframes rotation {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(359deg);
+            }
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            let initSpeed = 10;
+
+            $("#sun").click(function() {
+                initSpeed--; 
+                if (initSpeed == 0) initSpeed = 1;
+                console.log("change speed to: " + initSpeed);
+                $(this).css("animation", `rotation ${initSpeed}s infinite linear`);
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div id="stars">
+        <img id="sun" src="sun.png">
+        <div id="earth_div">
+            <img id="earth" src="earth.png">
+        </div>
+    </div>
+</body>
+
+</html>

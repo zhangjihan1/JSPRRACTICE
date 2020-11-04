@@ -1,0 +1,198 @@
+<!-- 
+下代码属于Deep Knowledge Education，其用途仅为教学展示，任何人不可复制，使用，或用于任何其他用途，违者必追究法律责任。
+The code below belongs to Deep Knowledge Education. 
+It is only for demonstration as part of education process.
+You cannot copy, use the code, nor can you use it for any other purpose.
+Offenders must be held accountable.
+Date: 17 Sep 2020
+-->
+<!-- 
+    练习说明：调用图片API，搜索相关图片，显示图片信息在网页上, 存储搜索结果到本地服务器上
+    练习知识点：
+            * REST API调用
+            * JavaScript DOM manipulation
+            * jQuery AJAX
+            * Nodejs
+
+    API网址: 搜索图片： https://www.flickr.com/services/api/flickr.photos.search.html
+            抓去图片：https://www.flickr.com/services/api/misc.urls.html
+            图片信息：https://www.flickr.com/services/api/flickr.photos.getInfo.html
+ -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title> Get Images By Calling APIs and Save Images to Local Server (jQuery AJAX Version)</title>
+    <style>
+        #searchControl > div {
+            padding: 5px;
+        }
+        
+        img {
+            width: 300px;
+            height: 300px;
+            margin: 5px;
+        }
+
+        #imgResult>div {
+            width: 300px;
+            float: left;
+            margin: 10px;
+        }
+
+        #imgResult>div>a {
+            width: 300px;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        window.onload = function () {
+            //(1)绑定按键点击事件
+            document.getElementById("searchBtn").addEventListener("click", searchHandler);
+            document.getElementById("saveBtn").addEventListener("click", saveImageHandler);
+            document.getElementById("removeBtn").addEventListener("click", removeImageHandler);
+            document.getElementById("getBtn").addEventListener("click", getLocalImageHandler);
+
+            function searchHandler() {
+                //读取用户输入
+                let searchText = document.getElementById("searchbox").value;
+                let perPage = document.getElementById("imageNumber").value;
+                console.log("User Search: " + searchText + " Image Number: " + perPage);
+
+                //创建 flicker 搜索图片的 GET URL
+                //搜索图片API： https://www.flickr.com/services/api/flickr.photos.search.html 
+                const API_KEY = "e807e0e115300954ec3884b46d8aeffe";
+                const SORT = "date-taken-desc";
+                let searchImgURL = `https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=${API_KEY}&text=${searchText}&sort${SORT}&per_page=${perPage}&format=json&nojsoncallback=1`;
+                console.log("Sending GET Request: " + URL);
+
+                //使用 jQUery AJAX GET 发送 API 请求并且读取服务器响应数据
+                $.get(searchImgURL, function (imageRes, status) {
+                    if (status === "success") {
+                        document.getElementById("imgResult").innerHTML = ""; //移除所有现有图片
+                        //for循环遍历返回的照片数据
+                        for (let img of imageRes.photos.photo) {
+                            let imgDivEle = document.createElement("div");
+
+                            //创建图片
+                            //抓去图片API：https://www.flickr.com/services/api/misc.urls.html
+                            let imgEle = document.createElement("img");
+                            imgEle.src = `https://farm${img.farm}.staticflickr.com/${img.server}/${img.id}_${img.secret}.jpg`;
+                            imgDivEle.append(imgEle);
+                            document.getElementById("imgResult").append(imgDivEle);
+
+                            //调用 API 添加图片信息
+                            //图片信息API：https://www.flickr.com/services/api/flickr.photos.getInfo.html
+                            let imgInformURL = `https://www.flickr.com/services/rest/?method=flickr.photos.getInfo&api_key=${API_KEY}&photo_id=${img.id}&format=json&nojsoncallback=1`;
+                            $.get(imgInformURL, function (imageInform, status) {
+                                if (status === "success") {
+                                    //图片标题
+                                    let titleEle = document.createElement("p");
+                                    titleEle.innerHTML = `<b>Image Title:</b> ${imageInform.photo.title._content}`;
+                                    imgDivEle.append(titleEle);
+
+                                    //图片时间
+                                    let dateEle = document.createElement("p");
+                                    dateEle.innerHTML = `<b>Image Taken Data:</b> ${imageInform.photo.dates.taken}`;
+                                    imgDivEle.append(dateEle);
+
+                                    //图片链接
+                                    let linkEle = document.createElement("a");
+                                    linkEle.innerHTML = `<b>Image Link:</b> ${img.id}`;
+                                    linkEle.setAttribute("id", img.id);
+                                    linkEle.setAttribute("href", imgEle.src);
+                                    linkEle.setAttribute("target", "_blank");
+                                    imgDivEle.append(linkEle);
+
+                                } else {
+                                    let errorMsg = "Can not get image information";
+                                    let errorEle = document.createElement("p");
+                                    errorEle.innerHTML = errorMsg;
+                                    imgDivEle.append(errorEle);
+                                }
+                            })
+
+                        }
+                    } else {
+                        let errorMsg = `API call: + ${URL} has error!`;
+                        document.getElementById("imgResult").innerHTML = `<h1>${errorMsg}</h1>`;
+                    }
+                });
+            }
+
+            //(3) 定义存储图片函数
+            function saveImageHandler() {
+                let imgResult = document.getElementById("imgResult");
+
+                //(4) 检查是否有图片
+                if (imgResult.innerHTML === "") {
+                    alert("No image to be saved!");
+                    return;
+                }
+                console.log("Sending Image Data to Local Server");
+
+                //(5)读取图片链接
+                let linkEles = imgResult.getElementsByTagName("a");
+                let linkArr = [];
+                for (let link of linkEles) {
+                    let imgObj = {id: link.getAttribute("id"), link: link.getAttribute("href")};
+                    linkArr.push(imgObj);
+                }
+                //(6) 向本地服务器发送POST Request，并且携带图片信息
+                let localServerURL = "http://127.0.0.1:8888/images";
+                $.post(localServerURL, JSON.stringify(linkArr), function (data, status) {
+                    removeImageHandler();
+                    document.getElementById("imgResult").innerHTML = `<h1>${data}</h1>`;
+                })
+            }
+
+            //(7) 读取存在本地服务器上的图片
+            function getLocalImageHandler() {
+                //(8) 向本地服务器发送POST Request，并且携带图片信息
+                let localServerURL = "http://127.0.0.1:8888/images";
+                $.get(localServerURL, function (fileNames, status) {
+                    //(9) 处理返回的图片
+                    removeImageHandler();
+                    let fileArr = JSON.parse(fileNames);
+                    for (let file of fileArr) {
+                        let imgEle = document.createElement("img");
+                        imgEle.setAttribute("src", `./imgs/${file}`);
+                        document.getElementById("imgResult").append(imgEle);
+                    }
+                });
+            }
+
+            //清空现有图片
+            function removeImageHandler() {
+                document.getElementById("imgResult").innerHTML = "";
+            }
+
+        };
+    </script>
+
+</head>
+
+<body>
+    <h1 id="title">Image Search App</h1>
+    <h1 id="title">Search Image from Flicker and Save Images to Local Server</h1>
+    <div id="searchControl">
+        <div>
+            <label name="searchbox">Search Images: </label>
+            <input id="searchbox" type="text" name="searchbox" value="Australia">
+            <label name="imageNumber">Image Number: </label>
+            <input id="imageNumber" type="text" name="imageNumber" value="20">
+        </div>
+
+        <div>
+            <button id="searchBtn">Search</button>
+            <button id="removeBtn">Remove Image on Page</button>
+            <button id="saveBtn">Save Image to Server</button>
+            <button id="getBtn">Get Images from Server</button>
+        </div>
+
+    </div>
+    <div id="imgResult"></div>
+</body>
+
+</html>
