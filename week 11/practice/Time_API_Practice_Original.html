@@ -1,0 +1,57 @@
+<!-- 
+下代码属于Deep Knowledge Education，其用途仅为教学展示，任何人不可复制，使用，或用于任何其他用途，违者必追究法律责任。
+The code below belongs to Deep Knowledge Education. 
+It is only for demonstration as part of education process.
+You cannot copy, use the code, nor can you use it for any other purpose.
+Offenders must be held accountable.
+Date: 17 Sep 2020
+-->
+<!-- 
+    练习说明：调用API，根据IP地址显示本地位置和时间
+    练习知识点：
+            * REST API调用
+            * JavaScript Fetch
+            * JavaScript Promise
+            * JavaScript DOM Manipulation 
+            * String Manipulation
+    API网址: http://worldtimeapi.org/
+ -->
+
+
+ <!DOCTYPE html>
+<html>
+<head>
+    <title>API Call</title>
+    <script>
+        window.onload = function() {
+            //(1)绑定按键点击事件
+            document.getElementById("btn").addEventListener("click", showTimeHandler);
+
+            //(2)定义 showTimeHandler 函数 调用API显示当前本地时间
+            function showTimeHandler() {
+                let URL = "http://worldtimeapi.org/api/ip";
+                fetch(URL)
+                .then(response => response.json())
+                .then (timeInform => {
+                    //(3) 读取API返回的时间信息
+                    let dateTime = timeInform.datetime.split("T");
+                    document.getElementById("timeZoom").innerHTML =`Time Zoom: ${timeInform.timezone}`;
+                    document.getElementById("date").innerHTML =`Date: ${dateTime[0]}`;
+                    document.getElementById("time").innerHTML =`Time: ${dateTime[1].substring(0, 8)}`;
+                });
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <h1 id="title">调用API，根据IP地址显示本地位置和时间</h1>
+    <button id="btn">Announce Current Time</button>
+    <div id="API_Call_Result">
+        <h1 id="timeZoom"></h1>
+        <h1 id="date"></h1>
+        <h1 id="time"></h1>
+    </div>
+</body>
+
+</html>
